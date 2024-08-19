@@ -1,0 +1,6 @@
+@Cache.Memcached_HostAddress = http://localhost:5136
+
+GET {{Cache.Memcached_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
