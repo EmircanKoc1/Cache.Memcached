@@ -2,6 +2,7 @@ using Enyim.Caching;
 using Enyim.Caching.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +39,25 @@ app.UseEnyimMemcached();
 app.UseHttpsRedirection();
 
 
-app.MapPost("addcache", async (
+
+app.MapPost("add-cache", async (
+    [FromServices] IMemcachedClient _memclient,
+    [FromBody] CacheModel cacheModel) =>
+{
+     var addResult =  await _memclient.AddAsync(
+          key: cacheModel.Key,
+          value: cacheModel.Value,
+          timeSpan: TimeSpan.FromSeconds(cacheModel.ExpirationSecond));
+
+    if (addResult)
+        return Results.Ok();
+
+    return Results.BadRequest("The data to be cached already exists !");
+
+});
+
+
+app.MapPost("set-cache", async (
     [FromServices] IMemcachedClient _client,
     string key,
     string value) =>
@@ -58,3 +77,4 @@ app.MapGet("getcache", async (
 
 app.Run();
 
+internal record CacheModel(string Key, string Value, double ExpirationSecond);
