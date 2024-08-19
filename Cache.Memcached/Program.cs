@@ -38,6 +38,23 @@ app.UseEnyimMemcached();
 app.UseHttpsRedirection();
 
 
+app.MapPost("addcache", async (
+    [FromServices] IMemcachedClient _client,
+    string key,
+    string value) =>
+{
+    await _client.SetAsync(key, value, TimeSpan.FromMinutes(1));
+
+});
+
+app.MapGet("getcache", async (
+    [FromServices] IMemcachedClient _client,
+    string key) =>
+{
+    return Results.Ok(await _client.GetAsync<string>(key));
+
+});
+
 
 app.Run();
 
