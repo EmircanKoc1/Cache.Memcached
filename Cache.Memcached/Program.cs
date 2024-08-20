@@ -55,6 +55,11 @@ app.MapPost("add-cache", async (
 
 });
 
+app.MapPost("set-cache", async (
+    [FromServices] IMemcachedClient _client,
+    [FromBody] CacheModel cacheModel) =>
+{
+    await _client.SetAsync(cacheModel.Key, cacheModel.Value, TimeSpan.FromSeconds(cacheModel.ExpirationSecond));
 
 app.MapPost("set-cache", async (
     [FromServices] IMemcachedClient _client,
