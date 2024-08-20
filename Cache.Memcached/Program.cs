@@ -2,13 +2,13 @@ using Enyim.Caching;
 using Enyim.Caching.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,10 +43,10 @@ app.MapPost("add-cache", async (
     [FromServices] IMemcachedClient _memclient,
     [FromBody] CacheModel cacheModel) =>
 {
-     var addResult =  await _memclient.AddAsync(
-          key: cacheModel.Key,
-          value: cacheModel.Value,
-          timeSpan: TimeSpan.FromSeconds(cacheModel.ExpirationSecond));
+    var addResult = await _memclient.AddAsync(
+         key: cacheModel.Key,
+         value: cacheModel.Value,
+         timeSpan: TimeSpan.FromSeconds(cacheModel.ExpirationSecond));
 
     if (addResult)
         return Results.Ok();
@@ -66,7 +66,6 @@ app.MapPost("set-cache", async (
 app.MapPut("replace-cache", async (
     [FromServices] IMemcachedClient _client,
     [FromBody] CacheModel cacheModel) =>
-    string value) =>
 {
     await _client.ReplaceAsync(cacheModel.Key, cacheModel.Value, TimeSpan.FromMinutes(cacheModel.ExpirationSecond));
 
@@ -113,6 +112,38 @@ app.MapGet("get-cache-by-name", async (
 {
     return Results.Ok(await _client.GetAsync<string>(key));
 
+});
+
+app.MapPut("update-cache-expiration", async (
+    [FromServices] IMemcachedClient _client,
+    string key) =>
+{
+
+    return await _client.TouchAsync(key, TimeSpan.FromMinutes(1));
+});
+
+app.MapPut("append", async (
+    [FromServices] IMemcachedClient _client,
+    [FromBody] CacheAppendOrPrependModel model) =>
+{
+   var appendResult =  _client.Append(model.key, GetBytes(model.value));
+
+    if (appendResult)
+        return Results.Ok("Operation successful");
+
+    return Results.BadRequest("Operation failed");
+});
+
+app.MapPut("prepend", (
+    [FromServices] IMemcachedClient _client,
+    [FromBody] CacheAppendOrPrependModel model) =>
+{
+    var prependResult = _client.Prepend(model.key, GetBytes(model.value));
+
+    if (prependResult)
+        return Results.Ok("Operation successful");
+
+    return Results.BadRequest("Operation failed");
 });
 
 
