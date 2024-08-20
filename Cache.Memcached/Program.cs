@@ -76,4 +76,9 @@ app.MapGet("get-cache-by-name", async (
 
 app.Run();
 
+
+static byte[] GetBytes(string value) => Encoding.UTF8.GetBytes(value);
+
 internal record CacheModel(string Key, string Value, double ExpirationSecond);
+internal record CacheIncrementOrDecrementModel(string Key, ulong DefaultValue, ulong IncrementOrDecrementValue);
+internal record CacheAppendOrPrependModel(string key, string value);
