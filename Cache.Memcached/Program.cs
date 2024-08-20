@@ -65,12 +65,47 @@ app.MapPost("set-cache", async (
 
 app.MapPut("replace-cache", async (
     [FromServices] IMemcachedClient _client,
-    string key,
+    [FromBody] CacheModel cacheModel) =>
     string value) =>
 {
-    await _client.SetAsync(key, value, TimeSpan.FromMinutes(1));
+    await _client.ReplaceAsync(cacheModel.Key, cacheModel.Value, TimeSpan.FromMinutes(cacheModel.ExpirationSecond));
 
 });
+
+app.MapPut("increment-by-key", (
+      [FromServices] IMemcachedClient _client,
+      [FromBody] CacheIncrementOrDecrementModel model) =>
+{
+    return _client.Increment(model.Key, model.DefaultValue, model.IncrementOrDecrementValue);
+});
+
+
+app.MapPut("decrement-by-key", (
+      [FromServices] IMemcachedClient _client,
+      [FromBody] CacheIncrementOrDecrementModel model) =>
+{
+    return _client.Decrement(model.Key, model.DefaultValue, model.IncrementOrDecrementValue);
+});
+
+app.MapDelete("delete-all-cache", async (
+    [FromServices] IMemcachedClient _client) =>
+{
+
+    await _client.FlushAllAsync();
+    return Results.Ok();
+});
+
+app.MapDelete("delete-cache-by-key", async (
+    [FromServices] IMemcachedClient _client,
+    [FromQuery] string key) =>
+{
+
+    var removeResult = await _client.RemoveAsync(key);
+
+    return removeResult;
+
+});
+
 
 app.MapGet("get-cache-by-name", async (
     [FromServices] IMemcachedClient _client,
